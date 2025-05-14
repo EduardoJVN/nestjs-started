@@ -1,5 +1,6 @@
 import { registerAs } from '@nestjs/config';
-import * as PACKAGE_JSON from "../../package.json";
+import * as PACKAGE_JSON from '../../package.json';
+
 export default registerAs('config', () => ({
   project: {
     apiPrefix: process.env.API_PREFIX || 'API-PREFIX',
@@ -13,7 +14,7 @@ export default registerAs('config', () => ({
   },
   server: {
     isProd: process.env.NODE_ENV === 'production',
-    port:(process.env.PORT && parseInt(process.env.PORT, 10) ) || 8080,
+    port: (process.env.PORT && parseInt(process.env.PORT, 10)) || 8080,
     context: process.env.CONTEXT || 'v1',
     origins: process.env.ORIGINS ? process.env.ORIGINS.split(',') : '*',
     allowedHeaders: process.env.ALLOWED_HEADERS,
@@ -23,7 +24,7 @@ export default registerAs('config', () => ({
   },
   swagger: {
     path: process.env.SWAGGER_PATH || 'docs',
-    enabled: process.env.SWAGGER_ENABLED|| false,
+    enabled: process.env.SWAGGER_ENABLED || false,
   },
   params: {},
   services: {},

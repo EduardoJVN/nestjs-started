@@ -5,12 +5,14 @@ import { AppService } from './app.service';
 import { config, validationSchema } from './config';
 
 @Module({
-  imports: [ConfigModule.forRoot({
-    ignoreEnvFile: process.env.NODE_ENV === 'production' || false,
-    load: [config],
-    isGlobal: true,
-    validationSchema,
-  })],
+  imports: [
+    ConfigModule.forRoot({
+      ignoreEnvFile: process.env.NODE_ENV === 'production' || false,
+      load: [config],
+      isGlobal: true,
+      validationSchema,
+    }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -6,26 +6,37 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import helmet from 'helmet';
-import * as swaggerStats from 'swagger-stats';
-
+import swaggerStats from 'swagger-stats';
+import { AppConfig } from './config';
+import { RequestHandler } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new Logger(),
   });
-  const appConfig = app.get<ConfigService>(ConfigService)['internalConfig']['config'];
-  const { server, swagger, project } = appConfig;
+
+  const configService = app.get(ConfigService);
+
+  const config = configService.get<AppConfig>('config');
+
+  if (!config) {
+    throw new Error('❌ No se pudo cargar la configuración desde ConfigService');
+  }
+
+  const { server, swagger, project } = config;
   app.setGlobalPrefix(`${server.context}`);
   app.use([cookieParser(), helmet(), compression()]);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidUnknownValues: true,
-    forbidNonWhitelisted: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidUnknownValues: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   if (swagger.enabled) {
     const config = new DocumentBuilder()
@@ -40,20 +51,16 @@ async function bootstrap() {
       ignoreGlobalPrefix: true,
     });
 
-    app.use(
-      swaggerStats.getMiddleware({
-        name: project.name,
-        version: project.version,
-        uriPath: '/v1/swagger-stats', 
-        swaggerSpec: document,
-        onAuthenticate: (req, username, password) => {
-          return username === 'admin' && password === 'admin';
-        },
-      })
-    );
+    const statsMiddleware: RequestHandler = swaggerStats.getMiddleware({
+      name: project.name,
+      version: project.version,
+      uriPath: '/v1/swagger-stats',
+      swaggerSpec: document,
+      onAuthenticate: (req, username, password) => username === 'admin' && password === 'admin',
+    });
+    app.use(statsMiddleware);
     SwaggerModule.setup(`${server.context}/${swagger.path}`, app, document, {});
   }
-
 
   if (server.corsEnabled) {
     app.enableCors({
@@ -63,7 +70,6 @@ async function bootstrap() {
       credentials: server.corsCredentials,
     });
   }
-
 
   await app.listen(server.port, async () => {
     const appServer = `http://localhost:${server.port}/${server.context}`;

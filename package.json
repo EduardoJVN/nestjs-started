@@ -76,6 +76,11 @@
     "printWidth": 100,
     "trailingComma": "all"
   },
+  "engines": {
+    "node": "^22.11.0",
+    "npm": "^10.9.0",
+    "yarn": "^1.22.22"
+  },
   "jest": {
     "moduleFileExtensions": [
       "js",
