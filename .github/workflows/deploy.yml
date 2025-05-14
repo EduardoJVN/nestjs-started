@@ -1,0 +1,65 @@
+name: CI/CD Pipeline for NestJS App
+
+on:
+  push:
+    branches:
+      - main # Ejecutar en cada push a la rama principal
+  pull_request:
+    branches:
+      - main # También ejecutarlo para Pull Requests a la rama principal
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Checkout del código
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # 2. Configurar Node.js
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    # 3. Instalar dependencias
+    - name: Install dependencies
+      run: npm install
+
+    # 4. Ejecutar `standard-version` para versionado automático
+    - name: Run versioning with standard-version
+      run: npm run release # Esto generará la nueva versión y actualizará package.json y CHANGELOG.md
+
+    # 5. Instalar las dependencias nuevamente (por si el release afectó package.json)
+    - name: Install dependencies after versioning
+      run: npm install
+
+    # 6. Ejecutar tests (si tienes pruebas unitarias)
+    - name: Run tests
+      run: npm run test
+
+    # 7. Crear la imagen Docker
+    - name: Build Docker image
+      run: |
+        docker build -t my-app:$GITHUB_SHA .
+
+    # 8. Autenticarse en Docker Hub (o el registro de contenedores que estés usando)
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # 9. Subir la imagen al Docker Hub
+    - name: Push Docker image to DockerHub
+      run: |
+        docker tag my-app:$GITHUB_SHA my-dockerhub-user/my-app:$GITHUB_SHA
+        docker push my-dockerhub-user/my-app:$GITHUB_SHA
+
+    # 10. Desplegar la aplicación en tu servidor (por ejemplo, un servidor con Docker)
+    - name: Deploy to Server
+      run: |
+        ssh user@your-server "docker pull my-dockerhub-user/my-app:$GITHUB_SHA && docker stop my-app || true && docker rm my-app || true && docker run -d --name my-app -p 3000:3000 my-dockerhub-user/my-app:$GITHUB_SHA"
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
