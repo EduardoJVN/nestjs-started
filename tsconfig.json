@@ -21,7 +21,8 @@
     "esModuleInterop": true,
   },
   "include": [
-    "src/**/*" // Incluir todo el código fuente en la carpeta src
+    "src/**/*",
+    "test/**/*"  // Asegúrate de incluir los archivos de test
   ],
   "exclude": [
     "node_modules" // Excluir node_modules de la compilación

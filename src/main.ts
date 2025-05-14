@@ -8,7 +8,6 @@ import compression from 'compression';
 import helmet from 'helmet';
 import swaggerStats from 'swagger-stats';
 import { AppConfig } from './config';
-import { RequestHandler } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -19,7 +18,7 @@ async function bootstrap() {
 
   const config = configService.get<AppConfig>('config');
 
-  if (!config) {
+  if (!config || typeof config !== 'object') {
     throw new Error('❌ No se pudo cargar la configuración desde ConfigService');
   }
 
@@ -51,7 +50,7 @@ async function bootstrap() {
       ignoreGlobalPrefix: true,
     });
 
-    const statsMiddleware: RequestHandler = swaggerStats.getMiddleware({
+    const statsMiddleware = swaggerStats.getMiddleware({
       name: project.name,
       version: project.version,
       uriPath: '/v1/swagger-stats',
@@ -71,7 +70,7 @@ async function bootstrap() {
     });
   }
 
-  await app.listen(server.port, async () => {
+  await app.listen(server.port, () => {
     const appServer = `http://localhost:${server.port}/${server.context}`;
     Logger.log(`📚 Swagger is running on: ${appServer}/${swagger.path}`, `${project.name}`);
     Logger.log(
@@ -81,5 +80,4 @@ async function bootstrap() {
     Logger.log(`🚀 Application is running on: ${appServer}`, `${project.name}`);
   });
 }
-
-(async () => await bootstrap())();
+void bootstrap();
