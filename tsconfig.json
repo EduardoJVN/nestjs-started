@@ -19,5 +19,11 @@
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-  }
+  },
+  "include": [
+    "src/**/*" // Incluir todo el código fuente en la carpeta src
+  ],
+  "exclude": [
+    "node_modules" // Excluir node_modules de la compilación
+  ]
 }
